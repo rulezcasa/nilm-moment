@@ -1,0 +1,42 @@
+seed: 42
+device: auto
+
+data:
+  root: data/splits
+  input_column: Aggregate
+  input_length: 512
+  target_index: midpoint
+  # Set these from the training split. The paper standardizes input and target
+  # by subtracting the mean and dividing by the standard deviation.
+  input_mean: 0.0
+  input_std: 1.0
+  target_mean: 0.0
+  target_std: 1.0
+  drop_target_above_aggregate: true
+
+model:
+  name: cnn_seq2point
+  conv_channels: [30, 30, 40, 50, 50]
+  kernel_sizes: [10, 8, 6, 5, 5]
+  strides: [1, 1, 1, 1, 1]
+  dense_units: 1024
+  dropout: 0.0
+
+training:
+  batch_size: 256
+  epochs: 50
+  learning_rate: 0.001
+  weight_decay: 0.0
+  optimizer: adam
+  loss: mse
+  patience: 8
+  num_workers: 0
+  max_windows_per_file: 100000
+
+search:
+  learning_rate: [0.0001, 0.0003, 0.001, 0.003]
+  batch_size: [128, 256, 512]
+  dense_units: [512, 1024, 2048]
+  dropout: [0.0, 0.1, 0.2]
+  weight_decay: [0.0, 0.000001, 0.0001]
+  loss: [mse, smooth_l1]
