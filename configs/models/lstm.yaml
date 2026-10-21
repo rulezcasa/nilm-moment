@@ -1,0 +1,17 @@
+# LSTM baseline, Kelly & Knottenbelt (arXiv:1507.06594).
+# Paper defaults; finalize the keys when src/models/lstm.py is implemented.
+model:
+  name: lstm
+  conv_channels: 16
+  conv_kernel_size: 4
+  hidden_sizes: [128, 256]
+  bidirectional: true
+  dense_units: 128
+  dropout: 0.0
+
+training:
+  batch_size: 256
+  learning_rate: 0.001
+  weight_decay: 0.0
+  optimizer: adam
+  loss: mse

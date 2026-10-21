@@ -1,0 +1,16 @@
+# BERT4NILM, Yue et al. (2020).
+# Paper defaults; finalize the keys when src/models/bert4nilm.py is implemented.
+model:
+  name: bert4nilm
+  hidden_size: 256
+  num_layers: 2
+  num_heads: 2
+  dropout: 0.1
+  mask_prob: 0.25
+
+training:
+  batch_size: 128
+  learning_rate: 0.0001
+  weight_decay: 0.0
+  optimizer: adam
+  loss: mse

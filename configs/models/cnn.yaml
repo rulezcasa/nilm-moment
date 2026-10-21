@@ -1,0 +1,31 @@
+# Sequence-to-point CNN, Zhang et al. (arXiv:1612.09106).
+model:
+  name: cnn
+  conv_channels: [30, 30, 40, 50, 50]
+  kernel_sizes: [10, 8, 6, 5, 5]
+  strides: [1, 1, 1, 1, 1]
+  dense_units: 1024
+  dropout: 0.0
+
+training:
+  batch_size: 512
+  learning_rate: 0.001
+  # Paper setup: Adam, no weight decay; dropout and early stopping regularize.
+  weight_decay: 0.0
+  optimizer: adam
+  loss: mse
+
+# Random search on a reduced budget; the best trial is retrained in full.
+# A full grid with a 4-point learning rate would be 4 x 3 x 3 = 36 trials.
+search:
+  method: random
+  trials: 16
+  # Normalized val MSE; ranks trials the same as MSE in watts (one normalizer per appliance).
+  metric: val_loss
+  budget:
+    epochs: 10
+    max_windows_per_file: 30000
+  space:
+    learning_rate: {log_uniform: [0.0001, 0.003]} # Randomly samples in this range for each run (log scale)
+    dense_units: [512, 1024, 2048]
+    dropout: [0.0, 0.1, 0.2]

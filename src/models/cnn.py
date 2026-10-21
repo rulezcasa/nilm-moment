@@ -1,30 +1,46 @@
 """CNN sequence-to-point model for NILM.
 
-The default architecture follows Figure 1 of Zhang et al.,
+The architecture in configs/models/cnn.yaml follows Figure 1 of Zhang et al.,
 "Sequence-to-point learning with neural networks for non-intrusive load
 monitoring" (arXiv:1612.09106), adapted from a 599-sample window to the
 project's 512-sample MOMENT window.
 """
 
-from dataclasses import dataclass
-from typing import Optional, Tuple
+from dataclasses import dataclass, fields
+from typing import Any, Mapping, Tuple
 
-import torch
 from torch import Tensor, nn
 
 
 @dataclass(frozen=True)
 class CNNConfig:
-    """Architecture and regularization settings for :class:`CNNSeq2Point`."""
+    """Architecture and regularization settings for :class:`CNNSeq2Point`.
 
-    input_length: int = 512
+    Values come from the ``model`` section of configs/models/cnn.yaml; there
+    are deliberately no architecture defaults here.
+    """
+
+    input_length: int
+    conv_channels: Tuple[int, ...]
+    kernel_sizes: Tuple[int, ...]
+    strides: Tuple[int, ...]
+    dense_units: int
+    dropout: float
     in_channels: int = 1
-    conv_channels: Tuple[int, ...] = (30, 30, 40, 50, 50)
-    kernel_sizes: Tuple[int, ...] = (10, 8, 6, 5, 5)
-    strides: Tuple[int, ...] = (1, 1, 1, 1, 1)
-    dense_units: int = 1024
-    dropout: float = 0.0
     output_dim: int = 1
+
+    @classmethod
+    def from_config(cls, model_cfg: Mapping[str, Any], input_length: int) -> "CNNConfig":
+        """Build from a config's ``model`` section; unknown keys raise so typos surface."""
+
+        values = {key: value for key, value in model_cfg.items() if key != "name"}
+        unknown = set(values) - {field.name for field in fields(cls)}
+        if unknown:
+            raise ValueError(f"unknown CNN config keys: {sorted(unknown)}")
+        for key in ("conv_channels", "kernel_sizes", "strides"):
+            if key in values:
+                values[key] = tuple(values[key])
+        return cls(input_length=input_length, **values)
 
     def __post_init__(self) -> None:
         if self.input_length < 1:
@@ -50,9 +66,9 @@ class CNNSeq2Point(nn.Module):
     midpoint definition.
     """
 
-    def __init__(self, config: Optional[CNNConfig] = None) -> None:
+    def __init__(self, config: CNNConfig) -> None:
         super().__init__()
-        self.config = config or CNNConfig()
+        self.config = config
 
         layers: list[nn.Module] = []
         in_channels = self.config.in_channels
@@ -100,10 +116,10 @@ class CNNSeq2Point(nn.Module):
         return self.regressor(self.flatten(self.convolution(x)))
 
 
-def build_cnn(**kwargs: object) -> CNNSeq2Point:
-    """Construct the default paper CNN with optional config overrides."""
+def build_cnn(model_cfg: Mapping[str, Any], input_length: int) -> CNNSeq2Point:
+    """Construct the CNN from a config's ``model`` section."""
 
-    return CNNSeq2Point(CNNConfig(**kwargs))
+    return CNNSeq2Point(CNNConfig.from_config(model_cfg, input_length))
 
 
 def count_parameters(model: nn.Module) -> int:
