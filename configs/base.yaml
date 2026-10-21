@@ -1,24 +1,17 @@
-# Settings shared by every model and appliance. Merge order:
-# base.yaml -> models/<model>.yaml -> appliances/<appliance>.yaml
-seed: 42
-device: cpu
+# Shared settings; merged base -> model -> appliance.
+seed: 44
+device: mps
 
 data:
   root: data/splits
-  # Fixed by MOMENT's context length so every model sees the same windows.
+  # MOMENT's context length.
   input_length: 512
   drop_target_above_aggregate: true
 
-training:
-  epochs: 50
-  patience: 8
-  num_workers: 0
-  max_windows_per_file: 100000
-
-# Weights & Biases: one project; runs are grouped per model/appliance (and per search).
+# Weights & Biases
 wandb:
   project: nilm-moment
-  entity: NILM-MOMENT # null = default entity of the logged-in account
-  mode: online # online | offline (sync later with `wandb sync`) | disabled
-  # Upload best.pt of standalone runs and search finals as model artifacts (never trials).
+  entity: NILM-MOMENT
+  mode: online # online | offline | disabled
+  # Upload best.pt as an artifact (not for search trials).
   log_model: true

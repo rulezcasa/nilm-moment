@@ -2,15 +2,15 @@
 
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any, Dict
 
 import yaml
 
 CONFIG_DIR = Path(__file__).resolve().parents[2] / "configs"
 
 
-def available_models(config_dir: Path = CONFIG_DIR) -> list[str]:
-    return sorted(path.stem for path in (config_dir / "models").glob("*.yaml"))
+def available_models() -> list[str]:
+    return sorted(path.stem for path in (CONFIG_DIR / "models").glob("*.yaml"))
 
 
 def appliance_slug(target: str) -> str:
@@ -27,23 +27,17 @@ def deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]
         if isinstance(value, dict) and isinstance(merged.get(key), dict):
             merged[key] = deep_merge(merged[key], value)
         else:
-            merged[key] = deepcopy(value)
+            merged[key] = value
     return merged
 
 
 def _read(path: Path) -> Dict[str, Any]:
-    if not path.is_file():
-        raise FileNotFoundError(f"config file not found: {path}")
-    return yaml.safe_load(path.read_text()) or {}
+    return yaml.safe_load(path.read_text())
 
 
-def load_config(model: str, target: str, config_dir: Union[str, Path] = CONFIG_DIR) -> Dict[str, Any]:
+def load_config(model: str, target: str) -> Dict[str, Any]:
     """Merge base -> models/<model>.yaml -> appliances/<target>.yaml."""
 
-    config_dir = Path(config_dir)
-    config = _read(config_dir / "base.yaml")
-    config = deep_merge(config, _read(config_dir / "models" / f"{model}.yaml"))
-    config = deep_merge(config, _read(config_dir / "appliances" / f"{appliance_slug(target)}.yaml"))
-    if config.get("target") != target:
-        raise ValueError(f"appliance config declares target {config.get('target')!r}, expected {target!r}")
-    return config
+    config = _read(CONFIG_DIR / "base.yaml")
+    config = deep_merge(config, _read(CONFIG_DIR / "models" / f"{model}.yaml"))
+    return deep_merge(config, _read(CONFIG_DIR / "appliances" / f"{appliance_slug(target)}.yaml"))

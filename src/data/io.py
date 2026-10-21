@@ -7,8 +7,6 @@ from typing import Union
 import numpy as np
 import pandas as pd
 
-SPLITS = ("train", "val", "test")
-
 
 @dataclass(frozen=True)
 class HouseSeries:
@@ -19,16 +17,10 @@ class HouseSeries:
     target: np.ndarray  # float32 appliance power, watts
     segment: np.ndarray  # int64 contiguous-recording id
 
-    def __post_init__(self) -> None:
-        if not len(self.aggregate) == len(self.target) == len(self.segment):
-            raise ValueError(f"{self.name}: columns have different lengths")
-
 
 def split_files(root: Union[str, Path], target: str, split: str) -> list[Path]:
     """Return the sorted house CSVs of ``<root>/<target>/<split>``."""
 
-    if split not in SPLITS:
-        raise ValueError(f"split must be one of {SPLITS}, got {split!r}")
     split_dir = Path(root) / target / split
     files = sorted(split_dir.glob("*.csv"))
     if not files:

@@ -1,19 +1,10 @@
-"""Run directories: best checkpoint, metrics log and config snapshot.
-
-Every training run trains one model on one appliance and owns one directory::
-
-    runs/<model>/<appliance>/<run name>/
-        config.yaml   merged config the run used
-        best.pt       weights with the lowest validation loss; used for evaluation
-        metrics.csv   one row per finished epoch
-        result.json   final summary, written last; its presence marks the run finished
-"""
+"""Run directory I/O: config, best checkpoint, metrics and result."""
 
 import csv
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 
 import torch
 import yaml
@@ -28,10 +19,10 @@ RESULT = "result.json"
 METRIC_FIELDS = ("epoch", "train_loss", "val_loss", "is_best", "seconds")
 
 
-def run_dir_path(root: Union[str, Path], model: str, target: str, run_name: Optional[str] = None) -> Path:
-    """``<root>/<model>/<appliance>/<run name>``; the name defaults to a timestamp."""
+def run_dir_path(model: str, target: str, run_name: Optional[str] = None) -> Path:
+    """``runs/<model>/<appliance>/<run name>``; the name defaults to a timestamp."""
 
-    return Path(root) / model / appliance_slug(target) / (run_name or datetime.now().strftime("%Y%m%d-%H%M%S"))
+    return RUNS_DIR / model / appliance_slug(target) / (run_name or datetime.now().strftime("%Y%m%d-%H%M%S"))
 
 
 def create_run_dir(run_dir: Path) -> None:
@@ -73,12 +64,6 @@ def save_best(run_dir: Path, *, model, config, normalizer, epoch: int, val_loss:
         },
         run_dir / BEST,
     )
-
-
-def load_checkpoint(path: Path) -> Dict[str, Any]:
-    """Load onto the CPU; ``load_state_dict`` moves tensors to the model's device."""
-
-    return torch.load(path, map_location="cpu", weights_only=True)
 
 
 def append_metrics(run_dir: Path, row: Dict[str, Any]) -> None:
