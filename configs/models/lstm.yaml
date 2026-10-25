@@ -1,0 +1,29 @@
+# Sequence-to-point LSTM (Kelly & Knottenbelt)
+model:
+  name: lstm
+  conv_channels: 16
+  conv_kernel_size: 4
+  lstm_hidden_sizes: [128, 256]
+  dense_units: 128
+
+training:
+  epochs: 100
+  patience: 8
+  num_workers: 0
+  batch_size: 512
+  learning_rate: 0.0003
+  weight_decay: 0.0
+  optimizer: adam
+  loss: mse
+  grad_clip_norm: 1.0
+  max_windows_per_file: 100000
+
+# Grid search
+search:
+  method: grid
+  budget:
+    epochs: 50
+    max_windows_per_file: 30000
+  space:
+    learning_rate: [0.0003, 0.001, 0.0001]
+    lstm_hidden_sizes: [[64, 128], [128, 256]]

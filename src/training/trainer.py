@@ -11,13 +11,14 @@ from tqdm import tqdm
 
 from src.data import NILMWindowDataset, Normalizer, make_window_loader, split_files
 from src.models.cnn import build_cnn, count_parameters
+from src.models.lstm import build_lstm
 from src.utils.config import appliance_slug
 from src.utils.seed import seed_everything
 
 from .checkpoint import BEST, append_metrics, create_run_dir, read_result, save_best, save_config, save_result
 from .tracking import LOGGED_MODEL_JOBS, TrackingInfo, start_run, upload_model
 
-MODELS = {"cnn": build_cnn}
+MODELS = {"cnn": build_cnn, "lstm": build_lstm}
 LOSSES = {"mse": nn.MSELoss}
 OPTIMIZERS = {"adam": torch.optim.Adam}
 
@@ -42,7 +43,7 @@ def load_split(config: Dict[str, Any], split: str) -> NILMWindowDataset:
     return dataset
 
 
-def run_epoch(model, loader, loss_fn, device, optimizer=None) -> float:
+def run_epoch(model, loader, loss_fn, device, optimizer=None, grad_clip_norm=None) -> float:
     training = optimizer is not None
     model.train(training)
     total_loss = 0.0
@@ -53,6 +54,8 @@ def run_epoch(model, loader, loss_fn, device, optimizer=None) -> float:
         loss = loss_fn(model(x).squeeze(-1), y)
         if training:
             loss.backward()
+            if grad_clip_norm is not None:
+                nn.utils.clip_grad_norm_(model.parameters(), grad_clip_norm)
             optimizer.step()
         total_loss += loss.item()
     return total_loss / len(loader)
@@ -116,7 +119,7 @@ def train_run(
     for epoch in range(1, training_cfg["epochs"] + 1):
         started = time.time()
         train_sampler.set_epoch(epoch)
-        train_loss = run_epoch(model, train_loader, loss_fn, device, optimizer)
+        train_loss = run_epoch(model, train_loader, loss_fn, device, optimizer, training_cfg.get("grad_clip_norm"))
         with torch.no_grad():
             val_loss = run_epoch(model, val_loader, loss_fn, device)
 

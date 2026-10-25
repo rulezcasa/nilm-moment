@@ -1,14 +1,14 @@
-# Sequence-to-point CNN, Zhang et al. (arXiv:1612.09106).
+# Sequence-to-point CNN
 model:
   name: cnn
   conv_channels: [30, 30, 40, 50, 50]
   kernel_sizes: [10, 8, 6, 5, 5]
   strides: [1, 1, 1, 1, 1]
   dense_units: 1024
-  dropout: 0.1
+  dropout: 0.0
 
 training:
-  epochs: 50
+  epochs: 100
   patience: 8
   num_workers: 0
   batch_size: 512
@@ -18,13 +18,26 @@ training:
   loss: mse
   max_windows_per_file: 100000
 
-# Grid search on a reduced budget.
+# Grid search 
+# search:
+#   method: grid
+#   budget:
+#     epochs: 50
+#     max_windows_per_file: 30000
+#   space:
+#     learning_rate: [0.0001, 0.0003, 0.001, 0.003]
+#     dense_units: [512, 1024, 2048]
+#     dropout: [0.0, 0.1, 0.2]
+
+
+# budgetted search based on previous results:
 search:
   method: grid
   budget:
-    epochs: 25
+    epochs: 50
     max_windows_per_file: 30000
   space:
-    learning_rate: [0.0001, 0.0003, 0.001, 0.003]
-    dense_units: [512, 1024, 2048]
+    learning_rate: [0.0003, 0.001]
+    dense_units: [1024]
     dropout: [0.0, 0.1, 0.2]
+

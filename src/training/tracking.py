@@ -6,7 +6,7 @@ from typing import Any, Dict, List
 
 import wandb
 
-LOGGED_MODEL_JOBS = ("train", "search-final")
+LOGGED_MODEL_JOBS = ("train",)
 
 
 @dataclass(frozen=True)

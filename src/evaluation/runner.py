@@ -1,11 +1,5 @@
-"""Evaluate a finished run's best checkpoint on a held-out split and log it to W&B.
+"""Score a finished run's best checkpoint on a held-out split and log it to W&B."""
 
-Examples:
-    python -m src.evaluation.evaluate --run-dir runs/cnn/kettle/final
-    python -m src.evaluation.evaluate --run-dir runs/cnn/kettle/final runs/cnn/fridge_freezer/final --split val
-"""
-
-import argparse
 import json
 from pathlib import Path
 from typing import Any, Dict
@@ -92,19 +86,3 @@ def evaluate_run(run_dir: Path, split: str = "test") -> Dict[str, Any]:
     run.finish()
     return result
 
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--run-dir", required=True, nargs="+", type=Path, help="run directories containing best.pt")
-    parser.add_argument("--split", default="test", choices=("test", "val"))
-    return parser.parse_args()
-
-
-def main() -> None:
-    args = parse_args()
-    for run_dir in args.run_dir:
-        evaluate_run(run_dir, args.split)
-
-
-if __name__ == "__main__":
-    main()

@@ -1,20 +1,16 @@
-"""Compose run configs from configs/base.yaml, a model file and an appliance file."""
+"""Compose run configs from configs/base.yaml and the selected model file."""
 
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import yaml
 
 CONFIG_DIR = Path(__file__).resolve().parents[2] / "configs"
 
 
-def available_models() -> list[str]:
-    return sorted(path.stem for path in (CONFIG_DIR / "models").glob("*.yaml"))
-
-
 def appliance_slug(target: str) -> str:
-    """Map a target column name to its config filename, e.g. 'Washing Machine' -> 'washing_machine'."""
+    """Map a target column name to its run directory name, e.g. 'Washing Machine' -> 'washing_machine'."""
 
     return target.lower().replace("-", "_").replace(" ", "_")
 
@@ -35,9 +31,10 @@ def _read(path: Path) -> Dict[str, Any]:
     return yaml.safe_load(path.read_text())
 
 
-def load_config(model: str, target: str) -> Dict[str, Any]:
-    """Merge base -> models/<model>.yaml -> appliances/<target>.yaml."""
+def load_config(model: Optional[str] = None, target: Optional[str] = None) -> Dict[str, Any]:
+    """Merge base -> models/<model>.yaml; ``model`` and ``target`` default to base.yaml's selection."""
 
     config = _read(CONFIG_DIR / "base.yaml")
-    config = deep_merge(config, _read(CONFIG_DIR / "models" / f"{model}.yaml"))
-    return deep_merge(config, _read(CONFIG_DIR / "appliances" / f"{appliance_slug(target)}.yaml"))
+    if target is not None:
+        config["target"] = target
+    return deep_merge(config, _read(CONFIG_DIR / "models" / f"{model or config['model']}.yaml"))

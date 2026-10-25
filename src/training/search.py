@@ -52,7 +52,7 @@ def _write_results(path: Path, rows: List[Dict[str, Any]]) -> None:
 
 
 def _reuse_or_clear(run_dir: Path) -> Optional[RunResult]:
-    """Return the finished result in ``run_dir``; otherwise delete any partial run so it can be retrained."""
+    """Return the finished result in ``run_dir``; otherwise delete any partial run so it can be rerun."""
 
     result = finished_run(run_dir)
     if result is None and run_dir.exists():
@@ -61,8 +61,8 @@ def _reuse_or_clear(run_dir: Path) -> Optional[RunResult]:
     return result
 
 
-def run_search(config: Dict[str, Any], search_dir: Path, retrain: bool = False) -> RunResult:
-    """Run or continue the search in ``search_dir``; return the best trial, or the final run if ``retrain`` is on."""
+def run_search(config: Dict[str, Any], search_dir: Path) -> RunResult:
+    """Run or continue the search in ``search_dir``; return the best trial."""
 
     search_cfg = config["search"]
     budget_config = apply_params(config, search_cfg["budget"])
@@ -99,20 +99,4 @@ def run_search(config: Dict[str, Any], search_dir: Path, retrain: bool = False) 
 
     best_params = trials[best_index]
     print(f"\nbest trial {best_index}: {best_params} val_loss={best_result.best_val:.6f}")
-    if not retrain:
-        return best_result
-
-    final_dir = search_dir / "final"
-    final = _reuse_or_clear(final_dir)
-    if final is not None:
-        print(f"final already done: val_loss={final.best_val:.6f}")
-        return final
-    print("=== retraining best parameters on the full budget")
-    tracking = TrackingInfo(
-        name=f"{group}/final",
-        group=group,
-        job_type="search-final",
-        meta={"search": {"name": search_dir.name, "best_trial": best_index, "params": best_params, "best_trial_val_loss": best_result.best_val}},
-        tables={"search_results": rows},
-    )
-    return train_run(apply_params(config, best_params), final_dir, train_set, val_set, normalizer, tracking)
+    return best_result

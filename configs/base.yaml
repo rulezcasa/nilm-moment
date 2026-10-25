@@ -1,10 +1,16 @@
-# Shared settings; merged base -> model -> appliance.
-seed: 44
+seed: 44 # Set before training and test
 device: mps
+target: Kettle # Kettle | Fridge-Freezer | Washing Machine
+model: cnn # configs/models/<model>.yaml
+
+search:
+  name: v1 # runs/<model>/<appliance>/search-<name>; reuse to continue
+
+test:
+  split: test  # split for evaluation: test | val
 
 data:
   root: data/splits
-  # MOMENT's context length.
   input_length: 512
   drop_target_above_aggregate: true
 
