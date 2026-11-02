@@ -1,7 +1,7 @@
-seed: 44 # Set before training and test
+seed: 44 # Followed by search and train (test picks best.pt from run directory)
 device: mps
 target: Kettle # Kettle | Fridge-Freezer | Washing Machine
-model: cnn # configs/models/<model>.yaml
+model: cnn # picks up configs/models/<model>.yaml 
 
 search:
   name: v1 # runs/<model>/<appliance>/search-<name>; reuse to continue
