@@ -85,6 +85,6 @@ python -m scripts.evaluate  # evaluate best.pt on the test (or val) split
 ```
 
 ## Acknowledgements
-H. Thangaraj and S. Janavi are contributing to this project for CS-271 (Topics in Machine Learning) under under Prof.Jelena Gligorijevic at the Computer Science Department, San Jose State Univeristy.
+H. Thangaraj and S. Janavi are contributing to this project for CS-271 (Topics in Machine Learning) under Prof.Jelena Gligorijevic at the Computer Science Department, San Jose State Univeristy.
 
 
