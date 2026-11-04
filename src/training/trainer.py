@@ -10,6 +10,7 @@ from torch import nn
 from tqdm import tqdm
 
 from src.data import NILMWindowDataset, Normalizer, make_window_loader, split_files
+from src.models.bert4nilm import build_bert4nilm
 from src.models.cnn import build_cnn, count_parameters
 from src.models.lstm import build_lstm
 from src.utils.config import appliance_slug
@@ -18,7 +19,7 @@ from src.utils.seed import seed_everything
 from .checkpoint import BEST, append_metrics, create_run_dir, read_result, save_best, save_config, save_result
 from .tracking import LOGGED_MODEL_JOBS, TrackingInfo, start_run, upload_model
 
-MODELS = {"cnn": build_cnn, "lstm": build_lstm}
+MODELS = {"cnn": build_cnn, "lstm": build_lstm, "bert4nilm": build_bert4nilm}
 LOSSES = {"mse": nn.MSELoss}
 OPTIMIZERS = {"adam": torch.optim.Adam}
 

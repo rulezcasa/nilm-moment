@@ -1,0 +1,35 @@
+# BERT4NILM (Yue et al., NILM 2020)
+model:
+  name: bert4nilm
+  hidden_size: 256
+  attention_heads: 2
+  transformer_layers: 2
+  feed_forward_size: 1024
+  dropout: 0.1
+  conv_kernel_size: 5
+  downsample_factor: 2
+  decoder_kernel_size: 4
+  decoder_stride: 2
+  dense_units: 128
+
+training:
+  epochs: 100
+  patience: 8
+  num_workers: 0
+  batch_size: 128
+  learning_rate: 0.0001
+  weight_decay: 0.0
+  optimizer: adam
+  loss: mse
+  grad_clip_norm: 1.0
+  max_windows_per_file: 100000
+
+# Grid search
+search:
+  method: grid
+  budget:
+    epochs: 50
+    max_windows_per_file: 30000
+  space:
+    learning_rate: [0.00005, 0.0001, 0.0003]
+    dropout: [0.0, 0.1]
