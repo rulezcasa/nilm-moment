@@ -13,15 +13,24 @@ from src.data import NILMWindowDataset, Normalizer, make_window_loader, split_fi
 from src.models.bert4nilm import build_bert4nilm
 from src.models.cnn import build_cnn, count_parameters
 from src.models.lstm import build_lstm
+from src.models.moment import build_moment
 from src.utils.config import appliance_slug
 from src.utils.seed import seed_everything
 
 from .checkpoint import BEST, append_metrics, create_run_dir, read_result, save_best, save_config, save_result
 from .tracking import LOGGED_MODEL_JOBS, TrackingInfo, start_run, upload_model
 
-MODELS = {"cnn": build_cnn, "lstm": build_lstm, "bert4nilm": build_bert4nilm}
+MODELS = {
+    "cnn": build_cnn,
+    "lstm": build_lstm,
+    "bert4nilm": build_bert4nilm,
+    "moment_random": build_moment,
+    "moment_frozen": build_moment,
+    "moment_finetune": build_moment,
+}
 LOSSES = {"mse": nn.MSELoss}
 OPTIMIZERS = {"adam": torch.optim.Adam}
+PRECISIONS = {"fp32": None, "bf16": torch.bfloat16}
 
 
 @dataclass(frozen=True)
@@ -44,7 +53,7 @@ def load_split(config: Dict[str, Any], split: str) -> NILMWindowDataset:
     return dataset
 
 
-def run_epoch(model, loader, loss_fn, device, optimizer=None, grad_clip_norm=None) -> float:
+def run_epoch(model, loader, loss_fn, device, optimizer=None, grad_clip_norm=None, amp_dtype=None) -> float:
     training = optimizer is not None
     model.train(training)
     total_loss = 0.0
@@ -52,7 +61,10 @@ def run_epoch(model, loader, loss_fn, device, optimizer=None, grad_clip_norm=Non
         x, y = x.to(device), y.to(device)
         if training:
             optimizer.zero_grad(set_to_none=True)
-        loss = loss_fn(model(x).squeeze(-1), y)
+        # Mixed precision covers the forward pass only; the loss is computed in fp32.
+        with torch.autocast(device_type=device.type, dtype=amp_dtype, enabled=amp_dtype is not None):
+            pred = model(x).squeeze(-1)
+        loss = loss_fn(pred.float(), y)
         if training:
             loss.backward()
             if grad_clip_norm is not None:
@@ -84,6 +96,7 @@ def train_run(
     device = torch.device(config["device"])
     model = MODELS[config["model"]["name"]](config["model"], config["data"]["input_length"]).to(device)
     loss_fn = LOSSES[training_cfg["loss"]]()
+    amp_dtype = PRECISIONS[training_cfg.get("precision", "fp32")]
     optimizer = OPTIMIZERS[training_cfg["optimizer"]](
         model.parameters(),
         lr=training_cfg["learning_rate"],
@@ -120,9 +133,11 @@ def train_run(
     for epoch in range(1, training_cfg["epochs"] + 1):
         started = time.time()
         train_sampler.set_epoch(epoch)
-        train_loss = run_epoch(model, train_loader, loss_fn, device, optimizer, training_cfg.get("grad_clip_norm"))
+        train_loss = run_epoch(
+            model, train_loader, loss_fn, device, optimizer, training_cfg.get("grad_clip_norm"), amp_dtype
+        )
         with torch.no_grad():
-            val_loss = run_epoch(model, val_loader, loss_fn, device)
+            val_loss = run_epoch(model, val_loader, loss_fn, device, amp_dtype=amp_dtype)
 
         is_best = val_loss < best_val
         if is_best:

@@ -1,4 +1,4 @@
-# BERT4NILM (Yue et al., NILM 2020)
+# BERT4NILM (Yue et al., NILM 2020), seq2point with MSE
 model:
   name: bert4nilm
   hidden_size: 256
@@ -17,7 +17,7 @@ training:
   patience: 8
   num_workers: 0
   batch_size: 128
-  learning_rate: 0.0001
+  learning_rate: 0.00005
   weight_decay: 0.0
   optimizer: adam
   loss: mse
@@ -32,4 +32,4 @@ search:
     max_windows_per_file: 30000
   space:
     learning_rate: [0.00005, 0.0001, 0.0003]
-    dropout: [0.0, 0.1]
+    dropout: [0.1, 0.2]

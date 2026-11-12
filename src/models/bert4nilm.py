@@ -1,10 +1,8 @@
-"""BERT4NILM sequence-to-point Transformer for appliance power prediction.
+"""BERT4NILM (Yue et al., NILM 2020) adapted to sequence-to-point.
 
-The architecture follows Yue et al.'s BERT4NILM model: a convolutional
-embedding and downsampling layer, learned positional embeddings, bidirectional
-self-attention blocks, and a transposed-convolution decoder.  This repository's
-training contract is sequence-to-point, so the midpoint of the decoded sequence
-is returned rather than the original model's full sequence-to-sequence output.
+Layers match the reference implementation; the midpoint of the decoded
+sequence is returned and training uses this repo's MSE objective, not the
+paper's masked multi-term loss.
 """
 
 from typing import Any, Mapping
@@ -12,6 +10,27 @@ from typing import Any, Mapping
 from torch import Tensor, nn
 
 from src.data.windowing import anchor_offset
+
+
+class TransformerBlock(nn.Module):
+    """Post-LN encoder block with dropout after the block, as in the reference."""
+
+    def __init__(self, hidden_size: int, attention_heads: int, feed_forward_size: int, dropout: float) -> None:
+        super().__init__()
+        self.attention = nn.MultiheadAttention(hidden_size, attention_heads, dropout=dropout, batch_first=True)
+        self.feed_forward = nn.Sequential(
+            nn.Linear(hidden_size, feed_forward_size),
+            nn.GELU(approximate="tanh"),
+            nn.Linear(feed_forward_size, hidden_size),
+        )
+        self.attention_norm = nn.LayerNorm(hidden_size, eps=1e-6)
+        self.feed_forward_norm = nn.LayerNorm(hidden_size, eps=1e-6)
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, x: Tensor) -> Tensor:
+        x = self.attention_norm(x + self.dropout(self.attention(x, x, x, need_weights=False)[0]))
+        x = self.feed_forward_norm(x + self.dropout(self.feed_forward(x)))
+        return self.dropout(x)
 
 
 class BERT4NILM(nn.Module):
@@ -50,19 +69,15 @@ class BERT4NILM(nn.Module):
         )
         self.pool = nn.LPPool1d(2, kernel_size=downsample_factor, stride=downsample_factor)
         self.position = nn.Embedding(latent_length, hidden_size)
-        self.input_norm = nn.LayerNorm(hidden_size)
+        self.input_norm = nn.LayerNorm(hidden_size, eps=1e-6)
         self.input_dropout = nn.Dropout(dropout)
 
-        layer = nn.TransformerEncoderLayer(
-            d_model=hidden_size,
-            nhead=attention_heads,
-            dim_feedforward=feed_forward_size,
-            dropout=dropout,
-            activation="gelu",
-            batch_first=True,
-            norm_first=False,
+        self.transformer = nn.Sequential(
+            *(
+                TransformerBlock(hidden_size, attention_heads, feed_forward_size, dropout)
+                for _ in range(transformer_layers)
+            )
         )
-        self.transformer = nn.TransformerEncoder(layer, num_layers=transformer_layers)
         self.decoder = nn.ConvTranspose1d(
             hidden_size,
             hidden_size,
@@ -78,13 +93,11 @@ class BERT4NILM(nn.Module):
         self._initialize_weights()
 
     def _initialize_weights(self) -> None:
-        """Use BERT-style small truncated-normal initialization where supported."""
+        """Truncated-normal init on every non-LayerNorm parameter, as in the reference."""
 
-        for module in self.modules():
-            if isinstance(module, (nn.Linear, nn.Conv1d, nn.ConvTranspose1d, nn.Embedding)):
-                nn.init.trunc_normal_(module.weight, mean=0.0, std=0.02, a=-0.04, b=0.04)
-                if getattr(module, "bias", None) is not None:
-                    nn.init.zeros_(module.bias)
+        for name, parameter in self.named_parameters():
+            if "norm" not in name:
+                nn.init.trunc_normal_(parameter, mean=0.0, std=0.02, a=-0.04, b=0.04)
 
     def forward(self, x: Tensor) -> Tensor:
         tokens = self.pool(self.embedding(x.unsqueeze(1))).transpose(1, 2)
@@ -99,4 +112,3 @@ def build_bert4nilm(model_cfg: Mapping[str, Any], input_length: int) -> BERT4NIL
     """Construct BERT4NILM from a config's ``model`` section."""
 
     return BERT4NILM(input_length, **{key: value for key, value in model_cfg.items() if key != "name"})
-

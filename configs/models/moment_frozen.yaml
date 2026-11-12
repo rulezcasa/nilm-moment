@@ -1,0 +1,30 @@
+# MOMENT-small, frozen encoder / linear probing (Goswami et al., ICML 2024), seq2point with MSE
+model:
+  name: moment_frozen
+  checkpoint: AutonLab/MOMENT-1-small
+  pretrained: true
+  freeze_encoder: true
+  head_dropout: 0.1
+
+training:
+  epochs: 100
+  patience: 8
+  num_workers: 0
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.0
+  optimizer: adam
+  precision: fp32
+  loss: mse
+  grad_clip_norm: 1.0
+  max_windows_per_file: 100000
+
+# Grid search
+search:
+  method: grid
+  budget:
+    epochs: 50
+    max_windows_per_file: 30000
+  space:
+    learning_rate: [0.0001, 0.001, 0.003]
+    head_dropout: [0.0, 0.1]

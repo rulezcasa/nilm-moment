@@ -1,5 +1,5 @@
 seed: 44 # Followed by search and train (test picks best.pt from run directory)
-device: mps
+device: cuda
 target: Kettle # Kettle | Fridge-Freezer | Washing Machine
 model: cnn # picks up configs/models/<model>.yaml 
 
