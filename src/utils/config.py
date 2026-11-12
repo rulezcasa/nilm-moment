@@ -1,5 +1,6 @@
 """Compose run configs from configs/base.yaml and the selected model file."""
 
+import argparse
 from copy import deepcopy
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -38,3 +39,17 @@ def load_config(model: Optional[str] = None, target: Optional[str] = None) -> Di
     if target is not None:
         config["target"] = target
     return deep_merge(config, _read(CONFIG_DIR / "models" / f"{model or config['model']}.yaml"))
+
+
+def load_config_from_cli(description: str) -> Dict[str, Any]:
+    """``load_config`` with optional ``--model``, ``--target`` and ``--seed`` overrides of base.yaml."""
+
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument("--model", help="configs/models/<model>.yaml")
+    parser.add_argument("--target", help="appliance column, e.g. Kettle")
+    parser.add_argument("--seed", type=int)
+    args = parser.parse_args()
+    config = load_config(args.model, args.target)
+    if args.seed is not None:
+        config["seed"] = args.seed
+    return config

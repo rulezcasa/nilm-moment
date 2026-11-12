@@ -2,6 +2,7 @@
 
 Example:
     python -m scripts.train
+    python -m scripts.train --model moment_frozen --target Kettle --seed 43
 """
 
 from __future__ import annotations
@@ -9,11 +10,11 @@ from __future__ import annotations
 from src.data import Normalizer
 from src.training.checkpoint import run_dir_path
 from src.training.trainer import load_split, train_run
-from src.utils.config import load_config
+from src.utils.config import load_config_from_cli
 
 
 def main() -> None:
-    config = load_config()
+    config = load_config_from_cli("Train one model and appliance.")
     train_set = load_split(config, "train")
     val_set = load_split(config, "val")
     # Statistics come from the training split only and are shared with validation.

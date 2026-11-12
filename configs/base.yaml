@@ -18,6 +18,6 @@ data:
 wandb:
   project: nilm-moment
   entity: NILM-MOMENT
-  mode: online # online | offline | disabled
+  mode: offline # online | offline | disabled; HPC compute nodes are offline, sync with `wandb sync`
   # Upload best.pt as an artifact (not for search trials).
   log_model: true
