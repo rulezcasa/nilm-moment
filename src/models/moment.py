@@ -1,16 +1,21 @@
 """MOMENT (Goswami et al., ICML 2024) adapted to sequence-to-point.
 
-The backbone is momentfm's MOMENTPipeline: RevIN, 8-point patches and a T5
-encoder.  The head is the paper's flatten + linear forecasting head with
-horizon 1; the RevIN window mean and std are appended to its input so the
-head sees the power level that RevIN removes.
+The backbone is momentfm's MOMENTPipeline: 8-point patches and a T5 encoder.  The head is the paper's flatten + linear forecasting head with
+horizon 1.  RevIN is disabled: the encoder sees the dataset-level normalized
+input like the other models.
 """
 
 import json
 from typing import Any, Mapping
 
-import torch
 from torch import Tensor, nn
+
+
+class _NoRevIN(nn.Module):
+    """Pass-through in place of momentfm's RevIN."""
+
+    def forward(self, x: Tensor, mask: Tensor = None, mode: str = "norm") -> Tensor:
+        return x
 
 
 class MOMENTNILM(nn.Module):
@@ -45,15 +50,14 @@ class MOMENTNILM(nn.Module):
         if input_length != self.backbone.seq_len:
             raise ValueError(f"MOMENT expects input_length {self.backbone.seq_len}, got {input_length}")
 
+        self.backbone.normalizer = _NoRevIN()
         patches = input_length // self.backbone.patch_len
         self.dropout = nn.Dropout(head_dropout)
-        self.regressor = nn.Linear(patches * self.backbone.config.d_model + 2, 1)
+        self.regressor = nn.Linear(patches * self.backbone.config.d_model, 1)
 
     def forward(self, x: Tensor) -> Tensor:
         embeddings = self.backbone.embed(x_enc=x.unsqueeze(1), reduction="none").embeddings
-        revin = self.backbone.normalizer
-        stats = torch.cat([revin.mean, revin.stdev], dim=-1).flatten(1)
-        return self.regressor(torch.cat([self.dropout(embeddings.flatten(1)), stats], dim=1))
+        return self.regressor(self.dropout(embeddings.flatten(1)))
 
 
 def build_moment(model_cfg: Mapping[str, Any], input_length: int) -> MOMENTNILM:

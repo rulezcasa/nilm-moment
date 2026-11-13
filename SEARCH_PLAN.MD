@@ -124,3 +124,49 @@ But only:
     6 searches
 
 can be running simultaneously because of the %2 limit.
+
+# Monitoring
+
+Run on coe-hpc3 (g17) from ~/nilm-moment. Replace <jobid> with the number
+printed by sbatch (current run: 113374). Task i = 0 Kettle, 1 Washing Machine,
+2 Fridge-Freezer.
+
+## Job status
+
+    squeue --me                     # R = running, PD = pending (reason in last column)
+    sacct -j <jobid>                # state of every task, including finished ones
+    sacct -j <jobid>_<i> --format=JobID,State,Elapsed,NodeList,ExitCode
+
+Pending reasons: (JobArrayTaskLimit) = held by %2, (Resources) = no free NSF GPU.
+Final states: COMPLETED, FAILED, TIMEOUT (hit 24 h, resubmit), CANCELLED.
+
+## Logs
+
+    slurm/logs/moment-search-<jobid>_<i>.out          # job start/end, node, status
+    slurm/logs/<jobid>_<i>/<model>-<appliance>.log    # one per search process
+    slurm/logs/<jobid>_<i>/gpu.csv                    # GPU use + memory, once a minute
+
+    cat slurm/logs/moment-search-<jobid>_0.out
+    tail -n 5 slurm/logs/<jobid>_<i>/*.log                     # latest lines of all 3 searches
+    tail -f slurm/logs/<jobid>_0/moment_finetune-kettle.log   # follow live (Ctrl+C to stop)
+    grep "epoch=" slurm/logs/<jobid>_<i>/*.log | tail -n 6       # recent epoch times / losses
+    grep -E "=== trial|already done|best trial" slurm/logs/<jobid>_<i>/*.log   # trial progress
+    grep -il "traceback\|error" slurm/logs/<jobid>_*/*.log     # find crashed searches
+
+## GPU
+
+    tail -n 5 slurm/logs/<jobid>_<i>/gpu.csv
+
+
+
+## Results
+
+    cat runs/moment_finetune/kettle/search-v1/results.csv
+    cat runs/moment_*/*/search-v1/results.csv        # every finished trial so far
+    ls runs/moment_*/*/search-v1/                      # trial folders per search
+
+## Control
+
+    scancel <jobid>                  # cancel all tasks
+    scancel <jobid>_<i>              # cancel one appliance
+    sbatch --array=<i> slurm/search.sh   # resubmit one appliance (finished trials are skipped)

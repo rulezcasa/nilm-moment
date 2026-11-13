@@ -21,6 +21,7 @@ training:
 
 # Grid search
 search:
+  name: v2 # v1 = revin on
   method: grid
   budget:
     epochs: 50
