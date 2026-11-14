@@ -4,11 +4,11 @@ model:
   checkpoint: AutonLab/MOMENT-1-small
   pretrained: true
   freeze_encoder: false
-  head_dropout: 0.1
+  head_dropout: 0.0
 
 training:
   epochs: 100
-  patience: 8
+  patience: 12
   num_workers: 0
   batch_size: 128
   learning_rate: 0.00005
@@ -21,11 +21,21 @@ training:
 
 # Grid search
 search:
-  name: v2 # v1 = revin on
+  name: v2
   method: grid
   budget:
     epochs: 50
     max_windows_per_file: 30000
   space:
-    learning_rate: [0.00001, 0.00003, 0.0001]
-    head_dropout: [0.0, 0.1]
+    learning_rate: [0.00002, 0.00003, 0.00005]
+
+# v1
+# search:
+#   name: v1
+#   method: grid
+#   budget:
+#     epochs: 50
+#     max_windows_per_file: 30000
+#   space:
+#     learning_rate: [0.00001, 0.00003, 0.0001]
+#     head_dropout: [0.0, 0.1]
