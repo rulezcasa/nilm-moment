@@ -104,7 +104,7 @@ Test evaluation is a separate step after training.
 # Monitoring
 
 Run on coe-hpc3 (g17) from ~/nilm-moment. Replace <jobid> with the number
-printed by sbatch (current run: <jobid>).
+printed by sbatch (current run: 116106).
 
 ## Job status
 
