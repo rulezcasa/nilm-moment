@@ -1,8 +1,10 @@
 #!/bin/bash
-# MOMENT grid search: finetune, frozen and random searches for one appliance, packed on one GPU.
+# Grid search: MODELS for one appliance, packed on one GPU; grids come from configs/models/<model>.yaml.
 # Submit from ~/nilm-moment on coe-hpc3:
-#   mkdir -p slurm/logs && sbatch --array=0-2%2 slurm/search.sh   # all appliances, at most 2 GPUs
-#   sbatch --array=1 slurm/search.sh                               # resubmit one appliance (resumes)
+#   mkdir -p slurm/logs
+#   sbatch --array=0-2%2 --export=ALL,MODELS="moment_finetune moment_frozen moment_random" slurm/search.sh
+#   resubmit one appliance (resumes, finished trials are skipped): same command with --array=<i>
+# Task i: 0 Kettle, 1 Washing Machine, 2 Fridge-Freezer.
 #SBATCH --job-name=moment-search
 #SBATCH --partition=nsfq
 #SBATCH --gres=gpu:1
@@ -12,6 +14,8 @@
 #SBATCH --output=slurm/logs/%x-%A_%a.out
 
 set -o pipefail
+: "${MODELS:?set MODELS, e.g. --export=ALL,MODELS=\"cnn lstm\"}"
+MODELS=($MODELS)
 TARGETS=("Kettle" "Washing Machine" "Fridge-Freezer")
 TARGET="${TARGETS[$SLURM_ARRAY_TASK_ID]}"
 SLUG=$(echo "$TARGET" | tr 'A-Z -' 'a-z__')
@@ -23,12 +27,12 @@ source ~/miniconda3/etc/profile.d/conda.sh
 conda activate nilm
 export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=4 MKL_NUM_THREADS=4
 
-echo "target=$TARGET node=$(hostname) start=$(date)"
+echo "target=$TARGET models=${MODELS[*]} node=$(hostname) start=$(date)"
 nvidia-smi --query-gpu=timestamp,utilization.gpu,memory.used,memory.total --format=csv -l 60 > "$LOGS/gpu.csv" &
 SMI=$!
 
 pids=()
-for MODEL in moment_finetune moment_frozen moment_random; do
+for MODEL in "${MODELS[@]}"; do
     python -u -m scripts.search --model "$MODEL" --target "$TARGET" > "$LOGS/$MODEL-$SLUG.log" 2>&1 &
     pids+=($!)
 done

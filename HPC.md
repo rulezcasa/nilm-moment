@@ -149,12 +149,12 @@ rsync -avP data/splits/ <sjsu_id>@coe-hpc1.sjsu.edu:~/nilm-moment/data/splits/
 
 ## 9. MOMENT search jobs
 
-[slurm/search.sh](slurm/search.sh) runs the finetune, frozen and random searches for one appliance as 3 processes on one H100 (about 5 GB of GPU memory each). A job array covers the 3 appliances; `%2` keeps at most 2 GPUs in use.
+[slurm/search.sh](slurm/search.sh) runs the searches for the models in `MODELS` (required) for one appliance as parallel processes on one H100 (about 5 GB of GPU memory each for MOMENT). Each model's grid comes from its `configs/models/<model>.yaml`. A job array covers the 3 appliances; `%2` keeps at most 2 GPUs in use.
 
 ```bash
 # on coe-hpc3, from ~/nilm-moment
 mkdir -p slurm/logs
-sbatch --array=0-2%2 slurm/search.sh        # 0 = Kettle, 1 = Washing Machine, 2 = Fridge-Freezer
+sbatch --array=0-2%2 --export=ALL,MODELS="moment_finetune moment_frozen moment_random" slurm/search.sh   # 0 = Kettle, 1 = Washing Machine, 2 = Fridge-Freezer
 squeue --me
 ```
 
@@ -164,4 +164,4 @@ squeue --me
 | `slurm/logs/<job>_<i>/<model>-<appliance>.log` | Per-search output (trials, epochs, val loss) |
 | `slurm/logs/<job>_<i>/gpu.csv` | GPU usage and memory, once a minute |
 
-If a task hits the 24 h limit, resubmit just that index (e.g. `sbatch --array=0 slurm/search.sh`). Finished trials are skipped.
+If a task hits the 24 h limit, resubmit just that index (the same command with `--array=0`). Finished trials are skipped.

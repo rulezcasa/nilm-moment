@@ -2,7 +2,7 @@
 
 Submission command:
 
-    sbatch --array=0-8%2 slurm/train.sh
+    sbatch --array=0-8%2 --export=ALL,MODELS="moment_finetune moment_frozen moment_random",SEEDS="42 43 44" slurm/train.sh
 
 
 # Hyperparameters (from search-v1 + search-v2)
@@ -142,7 +142,7 @@ means a 100-epoch run could hit the 24 h limit.
 
     scancel <jobid>                    # cancel all tasks
     scancel <jobid>_<i>                # cancel one task
-    sbatch --array=<i> slurm/train.sh  # rerun one task (restarts from scratch)
+    # rerun one task (restarts from scratch): same sbatch command with --array=<i>
 
 
 # Copy back to the Mac
@@ -152,3 +152,36 @@ means a 100-epoch run could hit the 24 h limit.
       019111521@coe-hpc1.sjsu.edu:'~/nilm-moment/runs/' runs/
 
     wandb sync runs/moment_*/*/4[2-4]/wandb/offline-run-*
+
+
+# Extension: seeds 45, 46 (all models)
+
+Brings every model from 3 to 5 seeds (42–46). Seeds 42–44 are reused.
+
+    Model                  Seeds trained   Runs
+    cnn, lstm, bert4nilm   45, 46          3 x 3 x 2 = 18
+    moment_* (3 variants)  45, 46          3 x 3 x 2 = 18
+
+Protocol unchanged per model: baselines patience 8, MOMENT patience 12.
+CNN uses dropout 0.1 for 45/46 on every appliance; its Washing Machine
+seeds 42–44 were trained with dropout 0.0.
+BERT4NILM 42–44 checkpoints use the reference-matching TransformerBlock
+(layer names transformer.0.attention_norm.*), same as the current code.
+
+Two arrays at once, each %1, so 2 GPUs in total:
+
+    sbatch --array=0-5%1 --export=ALL,MODELS="cnn lstm bert4nilm",SEEDS="45 46" slurm/train.sh
+    sbatch --array=0-5%1 --export=ALL,MODELS="moment_finetune moment_frozen moment_random",SEEDS="45 46" slurm/train.sh
+
+    task i → appliance = i / 2, seed = [45, 46][i % 2]
+
+Evaluation after both finish:
+
+    sbatch --array=0-2%1 --export=ALL,MODELS="cnn lstm bert4nilm",SEEDS="45 46" slurm/evaluate.sh
+    sbatch --array=0-2%1 --export=ALL,MODELS="moment_finetune moment_frozen moment_random",SEEDS="45 46" slurm/evaluate.sh
+
+Copy back (new seed folders only):
+
+    rsync -avP --exclude='best.pt' \
+      --include='*/' --include='*/*/' --include='*/*/4[56]/***' --exclude='*' \
+      019111521@coe-hpc1.sjsu.edu:'~/nilm-moment/runs/' runs/

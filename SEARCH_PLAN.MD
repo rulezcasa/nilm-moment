@@ -2,7 +2,7 @@
 
 Submission command:
 
-    sbatch --array=0-2%2 slurm/search.sh
+    sbatch --array=0-2%2 --export=ALL,MODELS="moment_finetune moment_frozen moment_random" slurm/search.sh
 
 
                     ┌─────────────────────────────┐
@@ -169,4 +169,4 @@ Final states: COMPLETED, FAILED, TIMEOUT (hit 24 h, resubmit), CANCELLED.
 
     scancel <jobid>                  # cancel all tasks
     scancel <jobid>_<i>              # cancel one appliance
-    sbatch --array=<i> slurm/search.sh   # resubmit one appliance (finished trials are skipped)
+    # resubmit one appliance (finished trials are skipped): same sbatch command with --array=<i>

@@ -1,8 +1,10 @@
 #!/bin/bash
-# MOMENT test evaluation: finetune, frozen and random for one appliance (seeds 42-44 in turn), packed on one GPU.
+# Test evaluation: MODELS for one appliance (SEEDS in turn), packed on one GPU.
 # Submit from ~/nilm-moment on coe-hpc3:
-#   mkdir -p slurm/logs && sbatch --array=0-2%2 slurm/evaluate.sh   # all appliances, at most 2 GPUs
-#   sbatch --array=1 slurm/evaluate.sh                              # rerun one appliance
+#   mkdir -p slurm/logs
+#   sbatch --array=0-2%2 --export=ALL,MODELS="moment_finetune moment_frozen moment_random",SEEDS="42 43 44" slurm/evaluate.sh
+#   sbatch --array=0-2%1 --export=ALL,MODELS="cnn lstm bert4nilm",SEEDS="45 46" slurm/evaluate.sh
+#   rerun one appliance: same command with --array=<i>
 # Task i: 0 Kettle, 1 Washing Machine, 2 Fridge-Freezer.
 #SBATCH --job-name=moment-eval
 #SBATCH --partition=nsfq
@@ -13,6 +15,9 @@
 #SBATCH --output=slurm/logs/%x-%A_%a.out
 
 set -o pipefail
+: "${MODELS:?set MODELS, e.g. --export=ALL,MODELS=\"cnn lstm\",SEEDS=\"42 43\"}" "${SEEDS:?set SEEDS}"
+MODELS=($MODELS)
+SEEDS=($SEEDS)
 TARGETS=("Kettle" "Washing Machine" "Fridge-Freezer")
 TARGET="${TARGETS[$SLURM_ARRAY_TASK_ID]}"
 SLUG=$(echo "$TARGET" | tr 'A-Z -' 'a-z__')
@@ -29,10 +34,10 @@ nvidia-smi --query-gpu=timestamp,utilization.gpu,memory.used,memory.total --form
 SMI=$!
 
 pids=()
-for MODEL in moment_finetune moment_frozen moment_random; do
+for MODEL in "${MODELS[@]}"; do
     (
         rc=0
-        for SEED in 42 43 44; do
+        for SEED in "${SEEDS[@]}"; do
             python -u -m scripts.evaluate --model "$MODEL" --target "$TARGET" --seed "$SEED" || rc=1
         done
         exit $rc
