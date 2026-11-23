@@ -116,4 +116,8 @@ H. Thangaraj and S. Janavi contributed to this work while undertaking a project 
 
 ## Data Access Statement
 
-This study used the REFIT Electrical Load Measurements dataset available at [doi:10.1038/sdata.2016.122](https://doi.org/10.1038/sdata.2016.122) and [doi:10.15129/9ab14b0e-19ac-4279-938f-27f643078cec](https://doi.org/10.15129/9ab14b0e-19ac-4279-938f-27f643078cec) under the CC BY 4.0 license. The processed and segmented dataset created in this study is available at [doi:10.57967/hf/11717](https://doi.org/10.57967/hf/11717).
+This study uses the REFIT Electrical Load Measurements dataset available at [doi:10.1038/sdata.2016.122](https://doi.org/10.1038/sdata.2016.122) and [doi:10.15129/9ab14b0e-19ac-4279-938f-27f643078cec](https://doi.org/10.15129/9ab14b0e-19ac-4279-938f-27f643078cec) under the CC BY 4.0 license. The processed and segmented dataset created in this study is available at [doi:10.57967/hf/11717](https://doi.org/10.57967/hf/11717).
+
+## AI Usage Statement
+
+AI coding tools were used to assist with writing, refactoring and debugging code. The experimental planning, choice of ablations, interpretation of results were carried out by the authors. All AI-assisted output was reviewed and verified by the authors, who take full responsibility for the content of this repository.
