@@ -1,6 +1,5 @@
 # TSFM4NILM: Sequence-to-Point Energy Disaggregation Using MOMENT
 
-> **Note:** This is ongoing work. The repository presents intermediate results, and models, configurations and findings may change.
 
 Non-intrusive load monitoring (NILM), also called energy disaggregation, estimates the power drawn by individual appliances from a household's aggregate electricity signal. Predicting appliance-level consumption without a separate meter per device can support energy conservation, demand management and fault detection.
 
@@ -39,6 +38,19 @@ All models are formulated for sequence-to-point prediction : given a window of 5
 Baselines, architectures, tuned configurations, training protocol and results are in [EVIDENCE_RECORD.md](EVIDENCE_RECORD.md).
 
 
+## Results
+
+Test-set MAE (W) and SAE, mean ± std over seeds 42–46. FF = Fridge-Freezer, K = Kettle, WM = Washing Machine.
+
+| Model | FF MAE | FF SAE | K MAE | K SAE | WM MAE | WM SAE |
+|---|---|---|---|---|---|---|
+| CNN | 20.68 ± 0.56 | 0.468 ± 0.072 | 6.88 ± 0.72 | 0.050 ± 0.030 | 14.01 ± 0.59 | 0.069 ± 0.047 |
+| LSTM | 19.53 ± 7.75 | 0.460 ± 0.158 | 6.20 ± 0.71 | 0.018 ± 0.005 | 12.70 ± 1.85 | 0.125 ± 0.093 |
+| BERT4NILM | 16.16 ± 1.21 | 0.354 ± 0.065 | 5.46 ± 0.61 | 0.086 ± 0.035 | 11.65 ± 0.84 | 0.081 ± 0.070 |
+| MOMENT-small (random init) | 17.02 ± 1.72 | 0.312 ± 0.114 | 8.38 ± 3.62 | 0.146 ± 0.139 | 19.58 ± 2.21 | 0.242 ± 0.105 |
+| MOMENT-small (frozen) | 36.78 ± 1.90 | 0.868 ± 0.134 | 18.17 ± 1.12 | 0.286 ± 0.080 | 28.54 ± 1.84 | 0.535 ± 0.103 |
+| MOMENT-small (full fine-tuning) | 14.45 ± 0.66 | 0.301 ± 0.058 | 5.80 ± 0.17 | 0.033 ± 0.026 | 11.96 ± 0.56 | 0.120 ± 0.029 |
+
 ## Directory structure
 
 ```
@@ -47,28 +59,41 @@ nilm-moment/
 │   ├── base.yaml           # seed, device, target appliance, model, data, W&B
 │   └── models/             # per-model architecture, training and search settings
 │       ├── cnn.yaml
-│       └── lstm.yaml
+│       ├── lstm.yaml
+│       ├── bert4nilm.yaml
+│       ├── moment_random.yaml
+│       ├── moment_frozen.yaml
+│       └── moment_finetune.yaml
 ├── data/                  
 │   ├── cleaned_source/     # REFIT cleaned CSVs
 │   ├── segmented/          # gap-segmented houses
 │   └── splits/<appliance>/<train|val|test>/
+├── figures/                # EDA and prediction-vs-actual figures
 ├── notebooks/
 │   ├── EDA.ipynb           # exploratory analysis
-│   └── splits.ipynb        # segmentation and house splits
+│   ├── splits.ipynb        # segmentation and house splits
+│   └── span_plots.ipynb    # prediction-vs-actual figures from spans/
 ├── runs/<model>/<appliance>/   # checkpoints, search results, evaluations
 ├── scripts/
 │   ├── search.py           # grid search
 │   ├── train.py            # train with selected config
-│   └── evaluate.py         # evaluate best checkpoint
+│   ├── evaluate.py         # evaluate best checkpoint
+│   └── predict_span.py     # best-seed predictions on one test span per appliance
+├── slurm/                  # HPC job scripts: search, train, evaluate, predict_span
+├── spans/<appliance>.{npz,json}  # prediction-vs-actual spans from predict_span
 ├── src/
 │   ├── data/               # IO, windowing, sampling, normalization, datasets
 │   ├── evaluation/         # metrics, evaluation runner, sanity baselines
-│   ├── models/             # CNN, LSTM
+│   ├── models/             # CNN, LSTM, BERT4NILM, MOMENT
 │   ├── training/           # trainer, search, checkpointing, W&B tracking
 │   └── utils/              # config loading, seeding
+├── EVIDENCE_RECORD.md      # architectures, tuned configs, protocol, results
+├── HPC.md                  # SJSU HPC and Slurm guide
+├── SEARCH_PLAN.MD          # hyperparameter search plan
+├── TRAIN_PLAN.MD           # final training plan
 └── requirements.txt
 ```
-**(`data/`) will be released separately at : {yet to publish} .**
+The processed and segmented data (`data/`) is released at [doi:10.57967/hf/11717](https://doi.org/10.57967/hf/11717).
 
 ## Usage
 
@@ -82,9 +107,13 @@ Set `target` and `model` in [configs/base.yaml](configs/base.yaml), then:
 python -m scripts.search    # grid search -> runs/<model>/<appliance>/search-<name>
 python -m scripts.train     # train -> runs/<model>/<appliance>/<seed>
 python -m scripts.evaluate  # evaluate best.pt on the test (or val) split
+python -m scripts.predict_span --target Kettle  # best-seed predictions on a test span -> spans/
 ```
 
-## Acknowledgements
-H. Thangaraj and S. Janavi are contributing to this project for CS-271 (Topics in Machine Learning) under Prof.Jelena Gligorijevic at the Computer Science Department, San Jose State Univeristy.
+## Acknowledgments
 
+H. Thangaraj and S. Janavi contributed to this work while undertaking a project for CS-271 under the guidance of Prof. Jelena Gligorijevic at San Jose State University. The authors acknowledge the Computer Science Department at San Jose State University for providing computational resources and support for this work.
 
+## Data Access Statement
+
+This study used the REFIT Electrical Load Measurements dataset available at [doi:10.1038/sdata.2016.122](https://doi.org/10.1038/sdata.2016.122) and [doi:10.15129/9ab14b0e-19ac-4279-938f-27f643078cec](https://doi.org/10.15129/9ab14b0e-19ac-4279-938f-27f643078cec) under the CC BY 4.0 license. The processed and segmented dataset created in this study is available at [doi:10.57967/hf/11717](https://doi.org/10.57967/hf/11717).

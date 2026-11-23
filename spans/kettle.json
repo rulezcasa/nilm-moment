@@ -1,0 +1,39 @@
+{
+  "target": "Kettle",
+  "house": "SEGMENTED_HOUSE2",
+  "hours": 24.0,
+  "samples": 12343,
+  "activations": 11.0,
+  "models": {
+    "cnn": {
+      "seed": 46,
+      "test_mae": 6.1961539503920635,
+      "span_mae": 15.759875297546387
+    },
+    "lstm": {
+      "seed": 44,
+      "test_mae": 5.357462973306247,
+      "span_mae": 7.508877754211426
+    },
+    "bert4nilm": {
+      "seed": 43,
+      "test_mae": 4.791218508722182,
+      "span_mae": 13.806764602661133
+    },
+    "moment_random": {
+      "seed": 46,
+      "test_mae": 5.171019624615938,
+      "span_mae": 11.822583198547363
+    },
+    "moment_frozen": {
+      "seed": 43,
+      "test_mae": 17.09335122929247,
+      "span_mae": 29.452608108520508
+    },
+    "moment_finetune": {
+      "seed": 43,
+      "test_mae": 5.619771125362877,
+      "span_mae": 10.822368621826172
+    }
+  }
+}

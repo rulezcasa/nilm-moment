@@ -1,0 +1,39 @@
+{
+  "target": "Washing Machine",
+  "house": "SEGMENTED_HOUSE10",
+  "hours": 24.0,
+  "samples": 12343,
+  "activations": 450.0,
+  "models": {
+    "cnn": {
+      "seed": 43,
+      "test_mae": 13.393813032665491,
+      "span_mae": 102.58903503417969
+    },
+    "lstm": {
+      "seed": 42,
+      "test_mae": 10.747885324061551,
+      "span_mae": 37.48969650268555
+    },
+    "bert4nilm": {
+      "seed": 46,
+      "test_mae": 10.49367425410302,
+      "span_mae": 94.1703872680664
+    },
+    "moment_random": {
+      "seed": 42,
+      "test_mae": 16.970120446758873,
+      "span_mae": 75.4785385131836
+    },
+    "moment_frozen": {
+      "seed": 45,
+      "test_mae": 26.867957688194657,
+      "span_mae": 111.23715209960938
+    },
+    "moment_finetune": {
+      "seed": 43,
+      "test_mae": 11.027525950193091,
+      "span_mae": 74.04424285888672
+    }
+  }
+}

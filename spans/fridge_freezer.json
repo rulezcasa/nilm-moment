@@ -1,0 +1,39 @@
+{
+  "target": "Fridge-Freezer",
+  "house": "SEGMENTED_HOUSE15",
+  "hours": 24.0,
+  "samples": 12343,
+  "activations": 60.0,
+  "models": {
+    "cnn": {
+      "seed": 46,
+      "test_mae": 20.010148627101245,
+      "span_mae": 12.594511985778809
+    },
+    "lstm": {
+      "seed": 43,
+      "test_mae": 14.810503855986958,
+      "span_mae": 3.878358840942383
+    },
+    "bert4nilm": {
+      "seed": 43,
+      "test_mae": 14.663151066015594,
+      "span_mae": 8.155999183654785
+    },
+    "moment_random": {
+      "seed": 45,
+      "test_mae": 14.647918641511977,
+      "span_mae": 10.758159637451172
+    },
+    "moment_frozen": {
+      "seed": 44,
+      "test_mae": 34.069869333241094,
+      "span_mae": 34.5971794128418
+    },
+    "moment_finetune": {
+      "seed": 45,
+      "test_mae": 14.006795539853108,
+      "span_mae": 6.536849498748779
+    }
+  }
+}
