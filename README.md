@@ -115,6 +115,10 @@ python -m scripts.predict_span --target Kettle  # best-seed predictions on a tes
 
 The full protocol and the tuned configurations are in [EVIDENCE_RECORD.md](EVIDENCE_RECORD.md).
 
+#### Additional information for CS-271 submission :
+- Teammate 2 evaluated the saved checkpoints over re-training the model due to computational overhead.
+- Every experiment and protocol planned was verified unanimously before execution.
+
 
 ## Acknowledgments
 
