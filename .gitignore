@@ -7,3 +7,6 @@ __pycache__/
 .DS_Store
 ._*
 /slurm/logs/
+/HPC.md
+/SEARCH_PLAN.MD
+/TRAIN_PLAN.MD

@@ -88,14 +88,11 @@ nilm-moment/
 │   ├── training/           # trainer, search, checkpointing, W&B tracking
 │   └── utils/              # config loading, seeding
 ├── EVIDENCE_RECORD.md      # architectures, tuned configs, protocol, results
-├── HPC.md                  # SJSU HPC and Slurm guide
-├── SEARCH_PLAN.MD          # hyperparameter search plan
-├── TRAIN_PLAN.MD           # final training plan
 └── requirements.txt
 ```
 The processed and segmented data (`data/`) is released at [doi:10.57967/hf/11717](https://doi.org/10.57967/hf/11717).
 
-## Usage
+## Reproducibility
 
 ```bash
 pip install -r requirements.txt
@@ -110,6 +107,15 @@ python -m scripts.evaluate  # evaluate best.pt on the test (or val) split
 python -m scripts.predict_span --target Kettle  # best-seed predictions on a test span -> spans/
 ```
 
+### Training
+
+1. **Search**: a grid search for each model and appliance on a reduced budget (50 epochs, 30,000 windows per house).
+2. **Train**: the best configuration is retrained with up to 100 epochs, early stopping patience of 8 on validation loss, and seeds 42–46. For one appliance and seed.
+3. **Evaluate**: the `best.pt` checkpoint of each seed is scored on the test split. Results are reported as mean ± std over seeds.
+
+The full protocol and the tuned configurations are in [EVIDENCE_RECORD.md](EVIDENCE_RECORD.md).
+
+
 ## Acknowledgments
 
 H. Thangaraj and S. Janavi contributed to this work while undertaking a project for CS-271 under the guidance of Prof. Jelena Gligorijevic at San Jose State University. The authors acknowledge the Computer Science Department at San Jose State University for providing computational resources and support for this work.
@@ -121,3 +127,7 @@ This study uses the REFIT Electrical Load Measurements dataset available at [doi
 ## AI Usage Statement
 
 AI coding tools were used to assist with writing, refactoring and debugging code. The experimental planning, choice of ablations, interpretation of results were carried out by the authors. All AI-assisted output was reviewed and verified by the authors, who take full responsibility for the content of this repository.
+
+## Author contribution
+
+All authors contributed equally to this project. H. Thangaraj pre-processed the dataset, implemented the training and evaluation pipeline. S. Janavi planned the experiments, implemented the models and documented findings. The authors declare no competing interest in this work.
