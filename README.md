@@ -47,8 +47,8 @@ Test-set MAE (W) and SAE, mean ± std over seeds 42–46. FF = Fridge-Freezer, K
 | CNN | 20.68 ± 0.56 | 0.468 ± 0.072 | 6.88 ± 0.72 | 0.050 ± 0.030 | 14.01 ± 0.59 | 0.069 ± 0.047 |
 | LSTM | 19.53 ± 7.75 | 0.460 ± 0.158 | 6.20 ± 0.71 | 0.018 ± 0.005 | 12.70 ± 1.85 | 0.125 ± 0.093 |
 | BERT4NILM | 16.16 ± 1.21 | 0.354 ± 0.065 | 5.46 ± 0.61 | 0.086 ± 0.035 | 11.65 ± 0.84 | 0.081 ± 0.070 |
-| MOMENT-small (random init) | 17.02 ± 1.72 | 0.312 ± 0.114 | 8.38 ± 3.62 | 0.146 ± 0.139 | 19.58 ± 2.21 | 0.242 ± 0.105 |
-| MOMENT-small (frozen) | 36.78 ± 1.90 | 0.868 ± 0.134 | 18.17 ± 1.12 | 0.286 ± 0.080 | 28.54 ± 1.84 | 0.535 ± 0.103 |
+| MOMENT-small (random init) | 17.02 ± 1.72 | 0.312 ± 0.114 | 8.38 ± 3.62 | 0.146 ± 0.138 | 19.58 ± 2.21 | 0.242 ± 0.105 |
+| MOMENT-small (frozen) | 36.78 ± 1.90 | 0.868 ± 0.133 | 18.17 ± 1.11 | 0.286 ± 0.080 | 28.54 ± 1.84 | 0.535 ± 0.103 |
 | MOMENT-small (full fine-tuning) | 14.45 ± 0.66 | 0.301 ± 0.058 | 5.80 ± 0.17 | 0.033 ± 0.026 | 11.96 ± 0.56 | 0.120 ± 0.029 |
 
 ## Directory structure
@@ -135,3 +135,7 @@ AI coding tools were used to assist with writing, refactoring and debugging code
 ## Author contribution
 
 All authors contributed equally to this project. H. Thangaraj pre-processed the dataset, implemented the training and evaluation pipeline. S. Janavi planned the experiments, implemented the models and documented findings. The authors declare no competing interest in this work.
+
+## License
+
+The code in this repository is released under the [MIT License](LICENSE). The REFIT data and the processed dataset remain according to the Data Access Statement.
